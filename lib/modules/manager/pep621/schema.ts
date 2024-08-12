@@ -54,6 +54,11 @@ export const PyProjectSchema = z.object({
             .optional(),
         })
         .optional(),
+      uv: z
+        .object({
+          'dev-dependencies': DependencyListSchema,
+        })
+        .optional(),
     })
     .optional(),
 });
@@ -69,6 +74,25 @@ export const PdmLockfileSchema = Toml.pipe(
   }),
 )
   .transform(({ package: pkg }) =>
+    Object.fromEntries(
+      pkg.map(({ name, version }): [string, string] => [name, version]),
+    ),
+  )
+  .transform((lock) => ({ lock }));
+
+export const UvLockfileSchema = Toml.pipe(
+  z.object({
+    version: z.bigint(),
+    'requires-python': z.string().optional(),
+    distribution: LooseArray(
+      z.object({
+        name: z.string(),
+        version: z.string(),
+      }),
+    ),
+  }),
+)
+  .transform(({ distribution: pkg }) =>
     Object.fromEntries(
       pkg.map(({ name, version }): [string, string] => [name, version]),
     ),
